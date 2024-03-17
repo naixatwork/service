@@ -1,4 +1,4 @@
-# ==============================================================================
+# ======================================================================================================================
 # Install dependencies
 
 dev-gotooling:
@@ -17,7 +17,7 @@ dev-brew-common:
 	brew list pgcli || brew install pgcli
 	brew list vault || brew install vault
 
-# ==============================================================================
+# ======================================================================================================================
 # Define dependencies
 
 GOLANG          := golang:1.20
@@ -37,7 +37,7 @@ VERSION         := 0.0.1
 SERVICE_IMAGE   := $(BASE_IMAGE_NAME)/$(SERVICE_NAME):$(VERSION)
 METRICS_IMAGE   := $(BASE_IMAGE_NAME)/$(SERVICE_NAME)-metrics:$(VERSION)
 
-# ==============================================================================
+# ======================================================================================================================
 # Building containers
 
 all: service
@@ -50,7 +50,7 @@ service:
 		--build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
 		.
 
-# ==============================================================================
+# ======================================================================================================================
 # Running from within k8s/kind
 
 dev-up-local:
@@ -69,12 +69,19 @@ dev-down-local:
 dev-down:
 	kind delete cluster --name $(KIND_CLUSTER)
 
+dev-load:
+	kind load docker-image $(SERVICE_IMAGE) --name $(KIND_CLUSTER)
+
+dev-apply:
+	kustomize build zarf/k8s/dev/sales | kubectl apply -f -
+	kubectl wait pods --namespace=$(NAMESPACE) --selector app=$(APP) --for=condition=Ready
+
 dev-status:
 	kubectl get nodes -o wide
 	kubectl get svc -o wide
 	kubectl get pods -o wide --watch --all-namespaces
 
-# ==============================================================================
+# ======================================================================================================================
 
 run-local:
 	go run app/services/sales-api/main.go
