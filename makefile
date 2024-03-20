@@ -133,3 +133,6 @@ test-endpoint:
 
 test-endpoint-local:
 	curl -il localhost:4000/debug/vars
+
+test-endpoint-local:
+	curl -il localhost:4000/debug/vars
