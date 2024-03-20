@@ -53,6 +53,15 @@ service:
 # ======================================================================================================================
 # Running from within k8s/kind
 
+dev-bill:
+	kind load docker-image $(TELEPRESENCE) --name $(KIND_CLUSTER)
+	telepresence --context=kind-$(KIND_CLUSTER) connect
+
+
+dev-bill-undo:
+	kind load docker-image $(TELEPRESENCE) --name $(KIND_CLUSTER)
+	telepresence --context=kind-$(KIND_CLUSTER) helm uninstall
+
 dev-up-local:
 	kind create cluster \
 		--image $(KIND) \
@@ -60,8 +69,11 @@ dev-up-local:
 		--config zarf/k8s/dev/kind-config.yaml
 
 	kubectl wait --timeout=120s --namespace=local-path-storage --for=condition=Available deployment/local-path-provisioner
+	kind load docker-image $(TELEPRESENCE) --name $(KIND_CLUSTER)
 
 dev-up: dev-up-local
+	telepresence --context=kind-$(KIND_CLUSTER) helm install
+	telepresence --context=kind-$(KIND_CLUSTER) connect
 
 dev-down-local:
 	kind delete cluster --name $(KIND_CLUSTER)
@@ -109,3 +121,15 @@ run-local-help:
 tidy:
 	go mod tidy
 	go mod vendor
+
+metrics-view:
+	expvarmon -ports="$(SERVICE_NAME).$(NAMESPACE).svc.cluster.local:4000" -vars="build,requests,goroutines,errors,panics,mem:memstats.Alloc"
+
+metrics-view-local:
+	expvarmon -ports="localhost:4000" -vars="build,requests,goroutines,errors,panics,mem:memstats.Alloc"
+
+test-endpoint:
+	curl -il $(SERVICE_NAME).$(NAMESPACE).svc.cluster.local:4000/debug/vars/
+
+test-endpoint-local:
+	curl -il localhost:4000/debug/vars

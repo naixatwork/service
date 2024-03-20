@@ -5,8 +5,10 @@ import (
 	"expvar"
 	"fmt"
 	"github.com/ardanlabs/conf/v3"
+	"github.com/naixatwork/service/business/web/v1/debug"
 	"github.com/naixatwork/service/foundation/logger"
 	"go.uber.org/zap"
+	"net/http"
 	"os"
 	"os/signal"
 	"runtime"
@@ -33,11 +35,11 @@ func main() {
 
 func run(log *zap.SugaredLogger) error {
 
-	// -------------------------------------------------------------------------
+	// -----------------------------------------------------------------------------------------------------------------
 
-	log.Infow("startup", "GOMAXPROCS", runtime.GOMAXPROCS(0), "BUILD", build)
+	log.Infow("startup", "GOMAXPROCS", runtime.GOMAXPROCS(0), "BUILD---", build)
 
-	// -------------------------------------------------------------------------
+	// -----------------------------------------------------------------------------------------------------------------
 	// Configuration
 
 	cfg := struct {
@@ -46,7 +48,7 @@ func run(log *zap.SugaredLogger) error {
 			ReadTimeout     time.Duration `conf:"default:5s"`
 			WriteTimeout    time.Duration `conf:"default:10s"`
 			IdleTimeout     time.Duration `conf:"default:120s"`
-			ShutdownTimeout time.Duration `conf:"default:20s"`
+			ShutdownTimeout time.Duration `conf:"default:20s,mask"`
 			APIHost         string        `conf:"default:0.0.0.0:3000"`
 			DebugHost       string        `conf:"default:0.0.0.0:4000"`
 		}
@@ -68,7 +70,6 @@ func run(log *zap.SugaredLogger) error {
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
-
 	// App Starting
 
 	log.Infow("starting service", "version", build)
@@ -81,6 +82,17 @@ func run(log *zap.SugaredLogger) error {
 	log.Infow("startup", "config", out)
 
 	expvar.NewString("build").Set(build)
+
+	// -----------------------------------------------------------------------------------------------------------------
+	// Start Debug Service
+
+	log.Infow("startup", "status", "debug v1 router started", "host", cfg.Web.DebugHost)
+
+	go func() {
+		if err := http.ListenAndServe(cfg.Web.DebugHost, debug.Mux()); err != nil {
+			log.Errorw("shutdown", "status", "debug v1 router closed", "host", cfg.Web.DebugHost, "ERROR", err)
+		}
+	}()
 
 	// -----------------------------------------------------------------------------------------------------------------
 
