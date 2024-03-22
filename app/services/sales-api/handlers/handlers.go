@@ -1,9 +1,11 @@
 package handlers
 
 import (
-	"github.com/dimfeld/httptreemux/v5"
 	"github.com/naixatwork/service/app/services/sales-api/handlers/v1/testgrp"
+	"github.com/naixatwork/service/business/web/v1/mid"
+	"github.com/naixatwork/service/foundation/web"
 	"go.uber.org/zap"
+	"net/http"
 	"os"
 )
 
@@ -12,10 +14,10 @@ type APIMuxConfig struct {
 	Log      *zap.SugaredLogger
 }
 
-func APIMux(cfg APIMuxConfig) *httptreemux.ContextMux {
-	mux := httptreemux.NewContextMux()
+func APIMux(cfg APIMuxConfig) *web.App {
+	app := web.NewApp(cfg.Shutdown, mid.Logger(cfg.Log), mid.Errors(cfg.Log), mid.Panics())
 
-	mux.GET("/test", testgrp.Test)
+	app.Handle(http.MethodGet, "/test", testgrp.Test)
 
-	return mux
+	return app
 }
