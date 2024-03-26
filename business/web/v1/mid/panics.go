@@ -3,6 +3,7 @@ package mid
 import (
 	"context"
 	"fmt"
+	"github.com/naixatwork/service/business/web/metrics"
 	"github.com/naixatwork/service/foundation/web"
 	"net/http"
 	"runtime/debug"
@@ -15,6 +16,7 @@ func Panics() web.Middleware {
 				if rec := recover(); rec != nil {
 					trace := debug.Stack()
 					err = fmt.Errorf("PANIC [%v] TRACE [%s]", rec, string(trace))
+					metrics.AddPanics(ctx)
 				}
 			}()
 			return handler(ctx, w, r)

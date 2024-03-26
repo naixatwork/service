@@ -2,6 +2,7 @@ package mid
 
 import (
 	"context"
+	"github.com/naixatwork/service/business/web/auth"
 	"github.com/naixatwork/service/business/web/v1"
 	"github.com/naixatwork/service/foundation/web"
 	"net/http"
@@ -27,6 +28,12 @@ func Errors(log *zap.SugaredLogger) web.Middleware {
 						Error: reqErr.Error(),
 					}
 					status = reqErr.Status
+				case auth.IsAuthError(err):
+					er = v1.ErrorResponse{
+						Error: http.StatusText(http.StatusUnauthorized),
+					}
+					status = http.StatusUnauthorized
+
 				default:
 					er = v1.ErrorResponse{
 						Error: http.StatusText(http.StatusInternalServerError),
