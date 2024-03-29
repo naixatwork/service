@@ -113,9 +113,9 @@ func run(log *zap.SugaredLogger) error {
 		KeyLookup: ks,
 	}
 
-	auth, err := auth.New(authCfg)
+	authVar, err := auth.New(authCfg)
 	if err != nil {
-		return fmt.Errorf("constructing auth: %w", err)
+		return fmt.Errorf("constructing authVar: %w", err)
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
@@ -140,7 +140,7 @@ func run(log *zap.SugaredLogger) error {
 	apiMux := handlers.APIMux(handlers.APIMuxConfig{
 		Shutdown: shutdown,
 		Log:      log,
-		Auth:     auth,
+		Auth:     authVar,
 	})
 
 	api := http.Server{

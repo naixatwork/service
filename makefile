@@ -142,3 +142,6 @@ test-endpoint-local-debug:
 
 test-endpoint-local-api:
 	curl -il localhost:3000/test
+
+users-endpoint-auth-local:
+	curl -il -H "Authorization: Bearer ${TOKEN}" localhost:3000/test/auth
